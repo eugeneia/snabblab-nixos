@@ -5,6 +5,12 @@ let
       ./../modules/hydra-slave.nix
     ];
     services.openssh.enable = true;
+    # TODO: this is wrong, but just temporary
+    fileSystems = [
+      { mountPoint = "/"; fsType = "ext4"; label = "root"; }
+    ];
+    boot.loader.grub.devices = ["/dev/sda"];
+
   };
 in {
   network.description = "Snabb Lab supporting server";
