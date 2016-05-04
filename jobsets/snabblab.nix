@@ -58,4 +58,5 @@ in {
       '';
     };
   };
+  inherit (import ./../pkgs {}) snabbpkgs;
 }
