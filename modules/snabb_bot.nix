@@ -73,7 +73,7 @@ in {
 
     systemd.services.snabb_bot =
       { description = "Run SnabbBot";
-        path  = [ bash curl git docker jq pciutils busybox ];
+        path  = [ bash curl git docker jq pciutils busybox ndpi ];
         script =
           ''
             export GITHUB_CREDENTIALS=${config.services.snabb_bot.credentials}
