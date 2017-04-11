@@ -2,15 +2,19 @@
 with lib;
 with pkgs;
 
-let
-  snabb_bot = writeScript "snabb_bot.sh" (readFile (fetchurl {
-    url = "https://raw.githubusercontent.com/eugeneia/snabb/b6bed3018fe0b076867a9f644f393fdc3ae251a3/src/scripts/snabb_bot.sh";
-    sha256 = "344630fb6ac0dab500e16b41759ea401b079304ae473ff88cfe37f3767a0d326";
-  }));
-in {
+{
   options = {
 
     services.snabb_bot = {
+
+      script = lib.mkOption {
+        type = types.path;
+        description = "Snabbbot script executed when snabbot is ran.";
+        default = writeScript "snabb_bot.sh" (readFile (fetchurl {
+          url = "https://raw.githubusercontent.com/eugeneia/snabb/b6bed3018fe0b076867a9f644f393fdc3ae251a3/src/scripts/snabb_bot.sh";
+          sha256 = "344630fb6ac0dab500e16b41759ea401b079304ae473ff88cfe37f3767a0d326";
+        }));
+      };
 
       credentials = lib.mkOption {
         type = types.str;
@@ -28,6 +32,14 @@ in {
         default = "SnabbCo/snabb";
         description = ''
           Target GitHub repository for SnabbBot instance.
+        '';
+      };
+
+      test_image = lib.mkOption {
+        type = types.str;
+        default = "eugeneia/snabb-nfv-test";
+        description = ''
+          Docket test image.
         '';
       };
 
@@ -78,12 +90,13 @@ in {
           ''
             export GITHUB_CREDENTIALS=${config.services.snabb_bot.credentials}
             export REPO=${config.services.snabb_bot.repo}
+            export SNABB_TEST_IMAGE=${config.services.snabb_bot.test_image}
             export SNABBBOTDIR=${config.services.snabb_bot.dir}
             export CURRENT=${config.services.snabb_bot.current}
 
             ${config.services.snabb_bot.environment}
 
-            exec flock -x -n /var/lock/snabb_bot ${snabb_bot}
+            exec flock -x -n /var/lock/lab ${config.services.snabb_bot.script}
           '';
         environment.SSL_CERT_FILE = config.environment.sessionVariables.SSL_CERT_FILE;
       };
