@@ -98,7 +98,8 @@ with pkgs;
 
             exec flock -x -n /var/lock/lab ${config.services.snabb_bot.script}
           '';
-        environment.SSL_CERT_FILE = config.environment.sessionVariables.SSL_CERT_FILE;
+        environment.NIX_SSL_CERT_FILE = "/etc/ssl/certs/ca-certificates.crt";
+        environment.SSL_CERT_FILE = "/etc/ssl/certs/ca-certificates.crt";
       };
 
     services.cron.systemCronJobs =

@@ -42,7 +42,7 @@
 
   nix = rec {
     # use nix sandboxing for greater determinism
-    useChroot = true;
+    useSandbox = true;
 
     # make sure we have enough build users
     nrBuildUsers = 30;
@@ -70,7 +70,7 @@
       };
     path = [ pkgs.gnutar pkgs.xz config.nix.package.out ];
     script = ''
-      nix-channel --add http://nixos.org/channels/nixos-16.03 nixos
+      nix-channel --add http://nixos.org/channels/nixos-17.03 nixos
       nix-channel --update nixos
     '';
     startAt = "05:40";

@@ -91,7 +91,8 @@ in {
 
             exec flock -x -n /var/lock/snabb_doc ${snabb_doc}
           '';
-        environment.SSL_CERT_FILE = config.environment.sessionVariables.SSL_CERT_FILE;
+        environment.NIX_SSL_CERT_FILE = "/etc/ssl/certs/ca-certificates.crt";
+        environment.SSL_CERT_FILE = "/etc/ssl/certs/ca-certificates.crt";
       };
 
     services.cron.systemCronJobs =
