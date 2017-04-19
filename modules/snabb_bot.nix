@@ -86,6 +86,7 @@ with pkgs;
     systemd.services.snabb_bot =
       { description = "Run SnabbBot";
         path  = [ bash curl git docker jq pciutils busybox ndpi ];
+        environment.LD_LIBRARY_PATH = "${pkgs.ndpi}/lib";
         script =
           ''
             export GITHUB_CREDENTIALS=${config.services.snabb_bot.credentials}
