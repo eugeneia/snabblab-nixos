@@ -37,8 +37,12 @@ in rec {
             alwaysSucceed = true;
             patchPhase = ''
               patch -p1 < ${testEnvPatch} || true
+              ulimit -c unlimited || true
+              echo -n "core_pattern "
+              cat /proc/sys/kernel/core_pattern || true
             '';
             preInstall = ''
+              cp core* $out/ && cp snabb $out/ || true
               cp qemu*.log $out/ || true
               cp snabb*.log $out/ || true
             '';
