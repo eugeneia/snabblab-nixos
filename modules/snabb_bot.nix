@@ -94,6 +94,8 @@ with pkgs;
             export SNABBBOTDIR=${config.services.snabb_bot.dir}
             export CURRENT=${config.services.snabb_bot.current}
 
+            export SNABB_IPSEC_SKIP_E2E_TEST=yes
+
             ${config.services.snabb_bot.environment}
 
             exec flock -x -n /var/lock/lab ${config.services.snabb_bot.script}
