@@ -11,8 +11,8 @@ with pkgs;
         type = types.path;
         description = "Snabbbot script executed when snabbot is ran.";
         default = writeScript "snabb_bot.sh" (readFile (fetchurl {
-            url = "https://raw.githubusercontent.com/eugeneia/snabb/snabb_bot-fixes/src/scripts/snabb_bot.sh";
-            sha256 = "15f2d1e0f077b3438800082fa77672957aa524f851bdcc50add6d18b21ba0b67";
+            url = "https://raw.githubusercontent.com/eugeneia/snabb/6d1594aeeaad64d216d76712a3e204f59bd3785a/src/scripts/snabb_bot.sh";
+            sha256 = "2d680584695756050f46735a20532fd03232aa89ea624525867749fb23eb1a12";
         }));
       };
 
@@ -85,7 +85,7 @@ with pkgs;
 
     systemd.services.snabb_bot =
       { description = "Run SnabbBot";
-        path  = [ bash curl git docker jq pciutils busybox ];
+        path  = [ coreutils bash curl git docker jq pciutils busybox ];
         script =
           ''
             export GITHUB_CREDENTIALS=${config.services.snabb_bot.credentials}
