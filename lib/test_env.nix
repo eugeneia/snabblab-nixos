@@ -13,13 +13,22 @@
         <nixpkgs/nixos/modules/profiles/qemu-guest.nix>
         ({config, pkgs, ...}: {
           # Needed tools inside the guest
-          environment.systemPackages = with pkgs; [ inetutils screen python pciutils ethtool tcpdump ipsecTools nmap (hiPrio netcat-openbsd) iperf2 ];
+          environment.systemPackages = with pkgs; [ inetutils screen python pciutils ethtool tcpdump ipsecTools nmap (hiPrio netcat-openbsd) iperf2 iptables ];
 
           fileSystems."/".device = "/dev/disk/by-label/nixos";
           boot.loader.grub.device = "/dev/sda";
 
+          nixpkgs.config.packageOverrides = pkgs:
+            { linux_4_4 = pkgs.linux_4_4.override {
+                  extraConfig =
+                          ''
+                            XFRM_STATISTICS y
+                          '';
+              };
+            };
           # Options needed by tests
-          boot.kernelPackages = kPackages;
+          boot.kernelPackages = pkgs.linuxPackages_4_4;
+          boot.kernelModules = [ "nf_log_ipv6" ];
           networking.firewall.enable = pkgs.lib.mkOverride 150 false;
           services.mingetty.autologinUser = "root";
           users.extraUsers.root.initialHashedPassword = pkgs.lib.mkOverride 150 "";
