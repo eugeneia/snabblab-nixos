@@ -98,5 +98,10 @@ in {
   murren-8 = defaults;
   murren-9 = defaults;
   murren-10 = defaults;
+
+  # Max’s box
+
+  breiberg = defaults;
+
 }
 
