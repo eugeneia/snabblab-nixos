@@ -1,0 +1,54 @@
+---
+title: "ESP hardware report"
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+    toc_float: true
+---
+
+This report compares ESP performance on different hardware.
+
+# Setup
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, error = TRUE, fig.width = 10, fig.height = 10)
+```
+
+```{r}
+library(ggplot2)
+library(plyr)
+results <- as.data.frame(read.csv("bench.csv"))
+```
+
+# snabbmark esp
+
+`snabbmark esp` is a micro benchmark measuring raw ESP
+encapsulation/decapsulation performance with multiple packet sizes.
+
+
+```{r}
+# Select successful (score present) encapsulate results
+esp_tunnel = subset(results, subset=(benchmark == "esp-tunnel" & score))
+```
+
+## Linegraph
+
+Linegraphs of median throughput and CPU cycles taken for different packet
+sizes.
+
+```{r}
+medians <- ddply(results, c("pktsize", "hardware", "unit", "config"), summarise, score=median(score))
+p <- ggplot(medians, aes(y = score, x = pktsize, color = hardware, fill = hardware))
+p <- p + theme(legend.position="left") + geom_point() + geom_line()
+p <- p + facet_grid(unit ~ config, scales = "free")
+p + ggtitle("Median throughput and CPU cycles taken on hardware")
+```
+
+## Tukey’s test
+
+Differences between hardware platforms.
+
+```{r}
+TukeyHSD(aov(score ~ hardware + pktsize, data=esp_tunnel))
+```
