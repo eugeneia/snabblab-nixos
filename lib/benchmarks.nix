@@ -23,11 +23,6 @@ in rec {
   */
   mkSnabbBenchTest = { name, times, keepShm, toCSV, ... }@attrs:
     let
-      # patch needed for Snabb v2016.05 and lower
-      testEnvPatch = pkgs.fetchurl {
-        url = "https://github.com/snabbco/snabb/commit/e78b8b2d567dc54cad5f2eb2bbb9aadc0e34b4c3.patch";
-        sha256 = "1nwkj5n5hm2gg14dfmnn538jnkps10hlldav3bwrgqvf5i63srwl";
-      };
       snabbBenchmark = num:
         let
           name' = "${name}_num=${toString num}";
@@ -35,9 +30,6 @@ in rec {
           ${name'} = pkgs.lib.hydraJob (testing.mkSnabbTest ({
             name = name';
             alwaysSucceed = true;
-            patchPhase = ''
-              patch -p1 < ${testEnvPatch} || true
-            '';
             preInstall = ''
               cp qemu*.log $out/ || true
               cp snabb*.log $out/ || true
