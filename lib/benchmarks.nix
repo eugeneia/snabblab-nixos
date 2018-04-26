@@ -207,18 +207,18 @@ in rec {
      `vita-loopback` has no dependencies except Snabb. Packet size can be
      specified via pktsize.
   */
-  mkMatrixBenchVitaLoopback = { snabb, times, pktsize ? "IMIX", hardware ? "murren", keepShm, ... }:
+  mkMatrixBenchVitaLoopback = { snabb, times, pktsize ? "IMIX",  conf ? "1", hardware ? "murren", keepShm, ... }:
     mkSnabbBenchTest {
-      name = "vita-loopback_pktsize=${pktsize}_packets=100e6_snabb=${testing.versionToAttribute snabb.version or ""}";
+      name = "vita-loopback_pktsize=${pktsize}_conf=${conf}_packets=100e6_snabb=${testing.versionToAttribute snabb.version or ""}";
       inherit snabb times hardware keepShm;
-      meta = { inherit pktsize; };
+      meta = { inherit pktsize conf; };
       toCSV = drv: ''
         score=$(awk '/Gbps/ {print $(NF-1)}' < ${drv}/log.txt)
         ${writeCSV drv "vita-loopback" "Gbps"}
       '';
       checkPhase = ''
         cd src
-        /var/setuid-wrappers/sudo -E ${snabb}/bin/snabb snsh program/vita/test.snabb ${pktsize} 100e6 |& tee $out/log.txt
+        /var/setuid-wrappers/sudo -E ${snabb}/bin/snabb snsh program/vita/test.snabb ${pktsize} 100e6 ${conf} |& tee $out/log.txt
       '';
 
     };
@@ -337,5 +337,13 @@ in rec {
       vita-loopback-60 = params: mkMatrixBenchVitaLoopback (params // {pktsize = "60"; hardware = "murren";});
       vita-loopback-600 = params: mkMatrixBenchVitaLoopback (params // {pktsize = "600"; hardware = "murren";});
       vita-loopback-1000 = params: mkMatrixBenchVitaLoopback (params // {pktsize = "1000"; hardware = "murren";});
+      vita-loopback-imix-x2 = params: mkMatrixBenchVitaLoopback (params // {pktsize = "IMIX"; conf = "2"; hardware = "murren";});
+      vita-loopback-60-x2 = params: mkMatrixBenchVitaLoopback (params // {pktsize = "60"; conf = "2"; hardware = "murren";});
+      vita-loopback-600-x2 = params: mkMatrixBenchVitaLoopback (params // {pktsize = "600"; conf = "2"; hardware = "murren";});
+      vita-loopback-1000-x2 = params: mkMatrixBenchVitaLoopback (params // {pktsize = "1000"; conf = "2"; hardware = "murren";});
+      vita-loopback-imix-x4 = params: mkMatrixBenchVitaLoopback (params // {pktsize = "IMIX"; conf = "4"; hardware = "murren";});
+      vita-loopback-60-x4 = params: mkMatrixBenchVitaLoopback (params // {pktsize = "60"; conf = "4"; hardware = "murren";});
+      vita-loopback-600-x4 = params: mkMatrixBenchVitaLoopback (params // {pktsize = "600"; conf = "4"; hardware = "murren";});
+      vita-loopback-1000-x4 = params: mkMatrixBenchVitaLoopback (params // {pktsize = "1000"; conf = "4"; hardware = "murren";});
     };
 }
