@@ -11,8 +11,8 @@ with pkgs;
         type = types.path;
         description = "Snabbbot script executed when snabbot is ran.";
         default = writeScript "snabb_bot.sh" (readFile (fetchurl {
-            url = "https://raw.githubusercontent.com/eugeneia/snabb/6d1594aeeaad64d216d76712a3e204f59bd3785a/src/scripts/snabb_bot.sh";
-            sha256 = "2d680584695756050f46735a20532fd03232aa89ea624525867749fb23eb1a12";
+            url = "https://raw.githubusercontent.com/eugeneia/snabb/90c3be721/src/scripts/snabb_bot.sh";
+            sha256 = "54994cb9d4031942a5b830b4ea154c2f5a0dfdd965dfb0caad40eda3dea5d20e";
         }));
       };
 
