@@ -209,7 +209,7 @@ in rec {
   */
   mkMatrixBenchVitaLoopback = { snabb, times, pktsize ? "IMIX",  conf ? "1", hardware ? "murren", keepShm, ... }:
     mkSnabbBenchTest {
-      name = "vita-loopback_pktsize=${pktsize}_conf=${conf}_packets=100e6_snabb=${testing.versionToAttribute snabb.version or ""}";
+      name = "vita-loopback_pktsize=${pktsize}_conf=${conf}_packets=500e6_snabb=${testing.versionToAttribute snabb.version or ""}";
       inherit snabb times hardware keepShm;
       meta = { inherit pktsize conf; };
       toCSV = drv: ''
@@ -218,7 +218,7 @@ in rec {
       '';
       checkPhase = ''
         cd src
-        /var/setuid-wrappers/sudo -E ${snabb}/bin/snabb snsh program/vita/test.snabb ${pktsize} 100e6 ${conf} 0,0,1,2,3 |& tee $out/log.txt
+        /var/setuid-wrappers/sudo -E ${snabb}/bin/snabb snsh program/vita/test.snabb ${pktsize} 500e6 ${conf} 0,0,1,2,3 |& tee $out/log.txt
       '';
 
     };
