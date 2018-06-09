@@ -29,17 +29,23 @@
 # For possible values see lib/reports/, e.g. "basic"
 , reports ? []
 # What kernel versions to benchmark on, for possible values see lib/benchmarks.nix
-, kernelVersions ? ["3.18"]  # fix kernel for now to reduce memory usage
+, kernelVersions ? null
 # What dpdk versions to benchmark on, for possible values see lib/benchmarks.nix
-, dpdkVersions ? []
+, dpdkVersions ? null
 # Additional qemu version to benchmark on, specified using source and name
 , dpdkAsrc ? null
 , dpdkAname ? null
 # What qemu versions to benchmark on, for possible values see lib/benchmarks.nix
-, qemuVersions ? []
+, qemuVersions ? null
 # Additional dpdk version to benchmark on, specified using source and name
 , qemuAsrc ? null
 , qemuAname ? null
+# Benchmark parameters
+, packetSizes ? [null]
+, configurations ? [null]
+, numPackets ? [null]
+, hardwareFeatures ? [null]
+, cpuBindings ? [null]
 # Optionally keep the shm folders
 , keepShm ? false
 
@@ -66,7 +72,10 @@ let
   customDpdk = buildDpdkFromSrc dpdkAname dpdkAsrc;
 
   subKernelPackages = selectKernelPackages kernelVersions;
-  subQemus = (selectQemus qemuVersions) ++ (if qemuAsrc != null then [customQemu] else []);
+  subQemus = selectQemus qemuVersions
+             ++ (if qemuAsrc != null then [customQemu] else []);
+  subDpdks = selectDpdks dpdkVersions linuxPackages_3_18
+             ++ (if dpdkAsrc != null then [(customDpdk kPackages)] else []);
 
   # Benchmarks using a matrix of software and a number of repeats
   benchmarks-list = with lib;
@@ -80,16 +89,32 @@ let
           testNixEnv = mkNixTestEnv { inherit kPackages dpdk; };
         in
         mergeAttrsMap (qemu:
-          mergeAttrsMap (snabb:
-            selectBenchmarks benchmarkNames { inherit snabb qemu dpdk times kPackages testNixEnv keepShm; }
-          ) snabbs
-        ) subQemus
-      ) ((selectDpdks dpdkVersions kPackages) ++ (if dpdkAsrc != null then [(customDpdk kPackages)] else []))
-    ) subKernelPackages;
+          mergeAttrsMap (pktsize:
+            mergeAttrsMap (conf:
+              mergeAttrsMap (packets:
+                mergeAttrsMap (hardware:
+                  mergeAttrsMap (cpu:
+                    mergeAttrsMap (snabb:
+                      selectBenchmarks
+                        benchmarkNames
+                        (filterAttrs
+                           (n: v: v != null)
+                           { inherit snabb qemu dpdk kPackages testNixEnv
+                                     times keepShm
+                                     pktsize conf packets hardware cpu; })
+                    ) snabbs
+                  ) cpuBindings
+                ) hardwareFeatures
+              ) numPackets
+            ) configurations
+          ) packetSizes
+        ) (if subQemus == [] then [null] else subQemus)
+      ) (if subDpdks == [] then [null] else subDpdks)
+    ) (if subKernelPackages == [] then [null] else subKernelPackages);
 
 in rec {
   # All versions of software used in benchmarks
-  software = listDrvToAttrs (snabbs ++ subQemus ++ (selectDpdks dpdkVersions linuxPackages_3_18));
+  software = listDrvToAttrs (snabbs ++ subQemus ++ subDpdks);
   benchmarks = benchmarks-list;
   benchmark-csv = mkBenchmarkCSV (builtins.attrValues benchmarks-list);
   benchmark-reports =

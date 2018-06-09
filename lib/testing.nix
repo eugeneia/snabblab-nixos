@@ -12,6 +12,12 @@ rec {
       SNABB_PCI_INTEL1 = "0000:01:00.1";
     };
     murren = {};
+    dyser = {
+      SNABB_PCI0 = "22:00.0";
+      SNABB_PCI1 = "22:00.0";
+      SNABB_PCI_INTEL1G0 = "22:00.0";
+      SNABB_PCI_INTEL1G1 = "23:00.2";
+    };
   };
 
   # Given a server group name such as "lugano"

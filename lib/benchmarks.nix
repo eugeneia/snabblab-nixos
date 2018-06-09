@@ -78,18 +78,18 @@ in rec {
       '';
     };
 
-  /* Execute `esp encapsulate tunnel` benchmark.
+  /* Execute `esp encapsulate/decapsulate` benchmark.
 
-     `esp encapsulate tunnel` has no dependencies except Snabb, and tests raw
-     lib.ipsec.esp encapsulate performance in tunnel mode.
+     `esp encapsulate/decapsulate` has no dependencies except Snabb, and tests
+     raw lib.ipsec.esp esp performance.
   */
-  mkMatrixBenchESPTunnel = { snabb, times, conf ? "encapsulate", hardware ? "murren", keepShm, pktsize, ... }:
+  mkMatrixBenchESP = { snabb, times, conf ? "tunnel encapsulate", hardware ? "murren", keepShm, pktsize ? "60", packets ? "20e6", ... }:
     mkSnabbBenchTest {
-      name = "esp-tunnel_conf=${conf}_snabb=${testing.versionToAttribute snabb.version or ""}_packets=100e6_pktsize=${pktsize}_hardware=${hardware}";
-      inherit snabb times conf hardware keepShm pktsize;
-      meta = { inherit hardware conf pktsize; };
+      name = "esp-tunnel_conf=${conf}_snabb=${testing.versionToAttribute snabb.version or ""}_packets=${packets}_pktsize=${pktsize}_hardware=${hardware}";
+      inherit snabb times hardware keepShm;
+      meta = { inherit hardware conf pktsize packets; };
       checkPhase = ''
-        /var/setuid-wrappers/sudo -E numactl -C 2 ${snabb}/bin/snabb snabbmark esp 100e6 ${pktsize} tunnel ${conf} |& tee $out/log.txt
+        /var/setuid-wrappers/sudo -E taskset -c 2 ${snabb}/bin/snabb snabbmark esp ${packets} ${pktsize} ${conf} |& tee $out/log.txt
       '';
       toCSV = drv: ''
         score=$(awk '/Gbit\/s/ {print $(NF-1)}' < ${drv}/log.txt)
@@ -220,18 +220,18 @@ in rec {
      `vita-loopback` has no dependencies except Snabb. Packet size can be
      specified via pktsize.
   */
-  mkMatrixBenchVitaLoopback = { snabb, times, pktsize ? "IMIX",  conf ? "1", hardware ? "murren", keepShm, ... }:
+  mkMatrixBenchVitaLoopback = { snabb, times, pktsize ? "IMIX",  conf ? "1", hardware ? "murren", keepShm, packets ? "20e6", cpu ? "0,0,1,2,3", ... }:
     mkSnabbBenchTest {
-      name = "vita-loopback_pktsize=${pktsize}_conf=${conf}_packets=100e6_snabb=${testing.versionToAttribute snabb.version or ""}";
+      name = "vita-loopback_pktsize=${pktsize}_conf=${conf}_packets=${packets}_hardware=${hardware}_cpu=${builtins.replaceStrings [","] ["x"] cpu}_snabb=${testing.versionToAttribute snabb.version or ""}";
       inherit snabb times hardware keepShm;
-      meta = { inherit pktsize conf; };
+      meta = { inherit pktsize conf packets hardware; };
       toCSV = drv: ''
         score=$(awk '/Gbps/ {print $(NF-1)}' < ${drv}/log.txt)
         ${writeCSV drv "vita-loopback" "Gbps"}
       '';
       checkPhase = ''
         cd src
-        /run/wrappers/bin/sudo -E ${snabb}/bin/snabb snsh program/vita/test.snabb ${pktsize} 100e6 ${conf} 0,0,1,2,3 |& tee $out/log.txt
+        /run/wrappers/bin/sudo -E ${snabb}/bin/snabb snsh program/vita/test.snabb ${pktsize} ${packets} ${conf} ${cpu} |& tee $out/log.txt
       '';
 
     };
@@ -241,7 +241,7 @@ in rec {
   */
   writeCSV = drv: benchName: unit: ''
     if test -z "$score"; then score="NA"; fi
-    echo ${benchName},${drv.meta.pktsize or "NA"},${drv.meta.conf or "NA"},${drv.meta.snabbVersion or "NA"},${drv.meta.kernelVersion or "NA"},${drv.meta.qemuVersion or "NA"},${drv.meta.dpdkVersion or "NA"},${toString drv.meta.repeatNum},$score,${unit},${drv.meta.hardware} >> $out/bench.csv
+    echo ${benchName},${drv.meta.pktsize or "NA"},${drv.meta.conf or "NA"},${drv.meta.snabbVersion or "NA"},${drv.meta.kernelVersion or "NA"},${drv.meta.qemuVersion or "NA"},${drv.meta.dpdkVersion or "NA"},${toString drv.meta.repeatNum},$score,${unit},${drv.meta.hardware},${drv.meta.packets or "NA"} >> $out/bench.csv
   '';
 
   # Generate CSV out of collection of benchmarking logs
@@ -256,7 +256,7 @@ in rec {
         source $stdenv/setup
         mkdir -p $out/nix-support
 
-        echo "benchmark,pktsize,config,snabb,kernel,qemu,dpdk,id,score,unit,hardware" > $out/bench.csv
+        echo "benchmark,pktsize,config,snabb,kernel,qemu,dpdk,id,score,unit,hardware,packets" > $out/bench.csv
         ${pkgs.lib.concatMapStringsSep "\n" (drv: drv.meta.toCSV drv) benchmarkList}
 
         # Make CSV file available via Hydra
@@ -307,15 +307,21 @@ in rec {
 
     # Select software collections based on version strings
     selectQemus = versions:
-      if versions == []
+      if versions == null
+      then []
+      else if versions == []
       then software.qemus
       else pkgs.lib.concatMap (version: pkgs.lib.filter (matchesVersionPrefix version) software.qemus) versions;
     selectDpdks = versions: kPackages:
-      if versions == []
+      if versions == null
+      then []
+      else if versions == []
       then (software.dpdks kPackages)
       else pkgs.lib.concatMap (version: pkgs.lib.filter (matchesVersionPrefix version) (software.dpdks kPackages)) versions;
     selectKernelPackages = versions:
-      if versions == []
+      if versions == null
+      then []
+      else if versions == []
       then software.kernelPackages
       else pkgs.lib.concatMap (version: pkgs.lib.filter (kPackages: pkgs.lib.hasPrefix version (pkgs.lib.getVersion kPackages.kernel)) software.kernelPackages) versions;
 
@@ -326,18 +332,6 @@ in rec {
     # Benchmarks aliases that can be referenced using just a name, i.e. "iperf-filter"
     benchmarks = {
       basic = mkMatrixBenchBasic;
-
-      esp-tunnel = mkMatrixBenchESPTunnel;
-      esp-tunnel-encapsulate-60 = params: mkMatrixBenchESPTunnel (params // {pktsize = "60";});
-      esp-tunnel-decapsulate-60 = params: mkMatrixBenchESPTunnel (params // {pktsize = "60"; conf = "decapsulate";});
-      esp-tunnel-encapsulate-250 = params: mkMatrixBenchESPTunnel (params // {pktsize = "250";});
-      esp-tunnel-decapsulate-250 = params: mkMatrixBenchESPTunnel (params // {pktsize = "250"; conf = "decapsulate";});
-      esp-tunnel-encapsulate-500 = params: mkMatrixBenchESPTunnel (params // {pktsize = "500";});
-      esp-tunnel-decapsulate-500 = params: mkMatrixBenchESPTunnel (params // {pktsize = "500"; conf = "decapsulate";});
-      esp-tunnel-encapsulate-1000 = params: mkMatrixBenchESPTunnel (params // {pktsize = "1000";});
-      esp-tunnel-decapsulate-1000 = params: mkMatrixBenchESPTunnel (params // {pktsize = "1000"; conf = "decapsulate";});
-      esp-tunnel-encapsulate-1500 = params: mkMatrixBenchESPTunnel (params // {pktsize = "1500";});
-      esp-tunnel-decapsulate-1500 = params: mkMatrixBenchESPTunnel (params // {pktsize = "1500"; conf = "decapsulate";});
 
       packetblaster = mkMatrixBenchPacketblaster;
       packetblaster-synth = mkMatrixBenchPacketblasterSynth;
@@ -357,18 +351,7 @@ in rec {
       dpdk-soft-nomrg-64 = params: mkMatrixBenchNFVDPDK (params // {pktsize = "64"; conf = "nomrg"; hardware = "murren";});
       dpdk-soft-noind-64 = params: mkMatrixBenchNFVDPDK (params // {pktsize = "64"; conf = "noind"; hardware = "murren";});
 
+      esp-tunnel = mkMatrixBenchESP;
       vita-loopback = mkMatrixBenchVitaLoopback;
-      vita-loopback-imix = params: mkMatrixBenchVitaLoopback (params // {pktsize = "IMIX"; hardware = "murren";});
-      vita-loopback-60 = params: mkMatrixBenchVitaLoopback (params // {pktsize = "60"; hardware = "murren";});
-      vita-loopback-600 = params: mkMatrixBenchVitaLoopback (params // {pktsize = "600"; hardware = "murren";});
-      vita-loopback-1000 = params: mkMatrixBenchVitaLoopback (params // {pktsize = "1000"; hardware = "murren";});
-      vita-loopback-imix-x2 = params: mkMatrixBenchVitaLoopback (params // {pktsize = "IMIX"; conf = "2"; hardware = "murren";});
-      vita-loopback-60-x2 = params: mkMatrixBenchVitaLoopback (params // {pktsize = "60"; conf = "2"; hardware = "murren";});
-      vita-loopback-600-x2 = params: mkMatrixBenchVitaLoopback (params // {pktsize = "600"; conf = "2"; hardware = "murren";});
-      vita-loopback-1000-x2 = params: mkMatrixBenchVitaLoopback (params // {pktsize = "1000"; conf = "2"; hardware = "murren";});
-      vita-loopback-imix-x4 = params: mkMatrixBenchVitaLoopback (params // {pktsize = "IMIX"; conf = "4"; hardware = "murren";});
-      vita-loopback-60-x4 = params: mkMatrixBenchVitaLoopback (params // {pktsize = "60"; conf = "4"; hardware = "murren";});
-      vita-loopback-600-x4 = params: mkMatrixBenchVitaLoopback (params // {pktsize = "600"; conf = "4"; hardware = "murren";});
-      vita-loopback-1000-x4 = params: mkMatrixBenchVitaLoopback (params // {pktsize = "1000"; conf = "4"; hardware = "murren";});
     };
 }
