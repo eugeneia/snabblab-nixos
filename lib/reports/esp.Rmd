@@ -1,0 +1,62 @@
+---
+title: "ESP benchmark report"
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+    toc_float: true
+---
+
+# Setup
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, error = TRUE, fig.width = 10, fig.height = 10)
+```
+
+```{r}
+library(ggplot2)
+results <- as.data.frame(read.csv("bench.csv"))
+```
+
+# snabbmark esp
+
+`snabbmark esp` is a micro benchmark measuring raw ESP
+encapsulation/decapsulation performance with multiple packet sizes.
+
+
+```{r}
+# Select successful (score present) encapsulate results
+esp_tunnel = subset(results, subset=(benchmark == "esp-tunnel" & score))
+
+plot_smooth <- function (df) {
+  p <- ggplot(df, aes(x = pktsize,  y = score, color = snabb))
+  p <- p + theme(legend.position="top")
+  p <- p + geom_point(alpha = 0.1) + geom_smooth(se=F, weight=1, alpha=0.1)
+  p <- p + facet_wrap(~ conf, scales = "free")
+  p + ggtitle("Smothened scatter plot of test results")
+}
+
+plot_dist <- function (df) {
+  p <- ggplot(df, aes(score, fill = snabb, color = snabb))
+  p <- p + theme(legend.position="top")
+  p <- p + geom_density(alpha = 0.1)
+  p <- p + facet_grid(pktsize ~ conf, scales = "free")
+  p + ggtitle("Shape (distribution) of test results")
+}
+```
+
+### Gbps
+
+```{r}
+gbps <- subset(esp_tunnel, subset=(unit == "Gbps"))
+plot_smooth(gbps)
+plot_dist(gbps)
+```
+
+### Cycles
+
+```{r}
+cycles <- subset(esp_tunnel, subset=(unit == "cycles"))
+plot_smooth(cycles)
+plot_dist(cycles)
+```

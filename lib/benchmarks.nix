@@ -78,6 +78,27 @@ in rec {
       '';
     };
 
+  /* Execute `esp encapsulate tunnel` benchmark.
+
+     `esp encapsulate tunnel` has no dependencies except Snabb, and tests raw
+     lib.ipsec.esp encapsulate performance in tunnel mode.
+  */
+  mkMatrixBenchESPTunnel = { snabb, times, conf ? "encapsulate", hardware ? "murren", keepShm, pktsize, ... }:
+    mkSnabbBenchTest {
+      name = "esp-tunnel_conf=${conf}_snabb=${testing.versionToAttribute snabb.version or ""}_packets=100e6_pktsize=${pktsize}_hardware=${hardware}";
+      inherit snabb times conf hardware keepShm pktsize;
+      meta = { inherit hardware conf pktsize; };
+      checkPhase = ''
+        /var/setuid-wrappers/sudo -E numactl -C 2 ${snabb}/bin/snabb snabbmark esp 100e6 ${pktsize} tunnel ${conf} |& tee $out/log.txt
+      '';
+      toCSV = drv: ''
+        score=$(awk '/Gbit\/s/ {print $(NF-1)}' < ${drv}/log.txt)
+        ${writeCSV drv "esp-tunnel" "Gbps"}
+        score=$(awk '/^cycles/ {print $(NF)}' < ${drv}/log.txt | sed 's/,//g')
+        ${writeCSV drv "esp-tunnel" "cycles"}
+      '';
+    };
+
   /* Execute `packetblaster` benchmark.
 
     `packetblaster` sets "lugano" as default hardware group,
@@ -305,6 +326,18 @@ in rec {
     # Benchmarks aliases that can be referenced using just a name, i.e. "iperf-filter"
     benchmarks = {
       basic = mkMatrixBenchBasic;
+
+      esp-tunnel = mkMatrixBenchESPTunnel;
+      esp-tunnel-encapsulate-60 = params: mkMatrixBenchESPTunnel (params // {pktsize = "60";});
+      esp-tunnel-decapsulate-60 = params: mkMatrixBenchESPTunnel (params // {pktsize = "60"; conf = "decapsulate";});
+      esp-tunnel-encapsulate-250 = params: mkMatrixBenchESPTunnel (params // {pktsize = "250";});
+      esp-tunnel-decapsulate-250 = params: mkMatrixBenchESPTunnel (params // {pktsize = "250"; conf = "decapsulate";});
+      esp-tunnel-encapsulate-500 = params: mkMatrixBenchESPTunnel (params // {pktsize = "500";});
+      esp-tunnel-decapsulate-500 = params: mkMatrixBenchESPTunnel (params // {pktsize = "500"; conf = "decapsulate";});
+      esp-tunnel-encapsulate-1000 = params: mkMatrixBenchESPTunnel (params // {pktsize = "1000";});
+      esp-tunnel-decapsulate-1000 = params: mkMatrixBenchESPTunnel (params // {pktsize = "1000"; conf = "decapsulate";});
+      esp-tunnel-encapsulate-1500 = params: mkMatrixBenchESPTunnel (params // {pktsize = "1500";});
+      esp-tunnel-decapsulate-1500 = params: mkMatrixBenchESPTunnel (params // {pktsize = "1500"; conf = "decapsulate";});
 
       packetblaster = mkMatrixBenchPacketblaster;
       packetblaster-synth = mkMatrixBenchPacketblasterSynth;
