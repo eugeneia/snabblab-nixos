@@ -218,7 +218,7 @@ in rec {
       '';
       checkPhase = ''
         cd src
-        /var/setuid-wrappers/sudo -E ${snabb}/bin/snabb snsh program/vita/test.snabb ${pktsize} 100e6 ${conf} |& tee $out/log.txt
+        /var/setuid-wrappers/sudo -E ${snabb}/bin/snabb snsh program/vita/test.snabb ${pktsize} 100e6 ${conf} 0,0,1,2,3 |& tee $out/log.txt
       '';
 
     };
