@@ -46,7 +46,7 @@ rec {
       '';
 
       buildPhase = ''
-        export PATH=$PATH:/var/setuid-wrappers/
+        export PATH=$PATH:/run/wrappers/bin
         export HOME=$TMPDIR
 
         # setup expected directories

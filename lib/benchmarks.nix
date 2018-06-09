@@ -70,7 +70,7 @@ in rec {
       name = "basic1_snabb=${testing.versionToAttribute snabb.version or ""}_packets=100e6";
       inherit snabb times hardware keepShm;
       checkPhase = ''
-        /var/setuid-wrappers/sudo -E ${snabb}/bin/snabb snabbmark basic1 100e6 |& tee $out/log.txt
+        /run/wrappers/bin/sudo -E ${snabb}/bin/snabb snabbmark basic1 100e6 |& tee $out/log.txt
       '';
       toCSV = drv: ''
         score=$(awk '/Mpps/ {print $(NF-1)}' < ${drv}/log.txt)
@@ -115,7 +115,7 @@ in rec {
       '';
       checkPhase = ''
         cd src
-        /var/setuid-wrappers/sudo -E ${snabb}/bin/snabb packetblaster replay --duration 1 \
+        /run/wrappers/bin/sudo -E ${snabb}/bin/snabb packetblaster replay --duration 1 \
           program/snabbnfv/test_fixtures/pcap/64.pcap "$SNABB_PCI_INTEL0" |& tee $out/log.txt
       '';
     };
@@ -136,7 +136,7 @@ in rec {
         ${writeCSV drv "blastsynth" "Mpps"}
       '';
       checkPhase = ''
-        /var/setuid-wrappers/sudo -E ${snabb}/bin/snabb packetblaster synth \
+        /run/wrappers/bin/sudo -E ${snabb}/bin/snabb packetblaster synth \
           --src 11:11:11:11:11:11 --dst 22:22:22:22:22:22 --sizes 64 \
           --duration 1 "$SNABB_PCI_INTEL0" |& tee $out/log.txt
       '';
@@ -170,7 +170,7 @@ in rec {
       SNABB_IPERF_BENCH_CONF = iperfports.${conf} or "";
       checkPhase = ''
         cd src
-        /var/setuid-wrappers/sudo -E program/snabbnfv/selftest.sh bench |& tee $out/log.txt
+        /run/wrappers/bin/sudo -E program/snabbnfv/selftest.sh bench |& tee $out/log.txt
       '';
     };
 
@@ -208,10 +208,10 @@ in rec {
 
           export SNABB_PACKET_SIZES=${pktsize}
           export SNABB_DPDK_BENCH_CONF=${dpdkports.${conf}}
-          /var/setuid-wrappers/sudo -E timeout 120 program/snabbnfv/dpdk_bench.sh |& tee $out/log.txt
+          /run/wrappers/bin/sudo -E timeout 120 program/snabbnfv/dpdk_bench.sh |& tee $out/log.txt
         '' else ''
           cd src
-          /var/setuid-wrappers/sudo -E timeout 120 program/snabbnfv/packetblaster_bench.sh |& tee $out/log.txt
+          /run/wrappers/bin/sudo -E timeout 120 program/snabbnfv/packetblaster_bench.sh |& tee $out/log.txt
         '';
     };
 
@@ -231,7 +231,7 @@ in rec {
       '';
       checkPhase = ''
         cd src
-        /var/setuid-wrappers/sudo -E ${snabb}/bin/snabb snsh program/vita/test.snabb ${pktsize} 100e6 ${conf} 0,0,1,2,3 |& tee $out/log.txt
+        /run/wrappers/bin/sudo -E ${snabb}/bin/snabb snsh program/vita/test.snabb ${pktsize} 100e6 ${conf} 0,0,1,2,3 |& tee $out/log.txt
       '';
 
     };
