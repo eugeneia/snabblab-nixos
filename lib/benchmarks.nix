@@ -85,17 +85,17 @@ in rec {
   */
   mkMatrixBenchESP = { snabb, times, conf ? "tunnel encapsulate", hardware ? "murren", keepShm, pktsize ? "60", packets ? "20e6", ... }:
     mkSnabbBenchTest {
-      name = "esp-tunnel_conf=${conf}_snabb=${testing.versionToAttribute snabb.version or ""}_packets=${packets}_pktsize=${pktsize}_hardware=${hardware}";
+      name = "esp_conf=${builtins.replaceStrings [" "] ["-"] conf}_snabb=${testing.versionToAttribute snabb.version or ""}_packets=${packets}_pktsize=${pktsize}_hardware=${hardware}";
       inherit snabb times hardware keepShm;
       meta = { inherit hardware conf pktsize packets; };
       checkPhase = ''
-        /var/setuid-wrappers/sudo -E taskset -c 2 ${snabb}/bin/snabb snabbmark esp ${packets} ${pktsize} ${conf} |& tee $out/log.txt
+        /run/wrappers/bin/sudo -E taskset -c 2 ${snabb}/bin/snabb snabbmark esp ${packets} ${pktsize} ${conf} |& tee $out/log.txt
       '';
       toCSV = drv: ''
         score=$(awk '/Gbit\/s/ {print $(NF-1)}' < ${drv}/log.txt)
-        ${writeCSV drv "esp-tunnel" "Gbps"}
+        ${writeCSV drv "esp" "Gbps"}
         score=$(awk '/^cycles/ {print $(NF)}' < ${drv}/log.txt | sed 's/,//g')
-        ${writeCSV drv "esp-tunnel" "cycles"}
+        ${writeCSV drv "esp" "cycles"}
       '';
     };
 
@@ -351,7 +351,7 @@ in rec {
       dpdk-soft-nomrg-64 = params: mkMatrixBenchNFVDPDK (params // {pktsize = "64"; conf = "nomrg"; hardware = "murren";});
       dpdk-soft-noind-64 = params: mkMatrixBenchNFVDPDK (params // {pktsize = "64"; conf = "noind"; hardware = "murren";});
 
-      esp-tunnel = mkMatrixBenchESP;
+      esp = mkMatrixBenchESP;
       vita-loopback = mkMatrixBenchVitaLoopback;
     };
 }
