@@ -42,6 +42,7 @@ in rec {
               if [ -n "$keepShm" ]; then
                 cd /var/run/snabb
                 sudo tar cvf $out/snabb.tar [0-9]*
+                sudo rm -r [0-9]*
                 sudo chown $(whoami):$(id -g -n) $out/snabb.tar
                 xz -0 -T0 $out/snabb.tar
                 mkdir -p $out/nix-support
