@@ -25,8 +25,8 @@ results <- as.data.frame(read.csv("bench.csv"))
 single route with multiple packet sizes.
 
 ```{r}
-# Select successful (score present) vita-loopback results
-loopback = subset(results, subset=(benchmark == "vita-loopback" & score))
+# Select successful (Gbps score present) vita-loopback results
+loopback = subset(results, subset=(benchmark == "vita-loopback" & unit == "Gbps" & score))
 ```
 
 ## Line graph

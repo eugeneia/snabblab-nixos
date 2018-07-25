@@ -227,8 +227,10 @@ in rec {
       inherit snabb times hardware keepShm;
       meta = { inherit pktsize conf packets hardware; };
       toCSV = drv: ''
-        score=$(awk '/Gbps/ {print $(NF-1)}' < ${drv}/log.txt)
+        score=$(awk 'match($0,/[^ ]+ Gbps/) {print substr($0,RSTART,RLENGTH-5)}' < ${drv}/log.txt)
         ${writeCSV drv "vita-loopback" "Gbps"}
+        score=$(awk 'match($0,/[^ ]+ Mpps/) {print substr($0,RSTART,RLENGTH-5)}' < ${drv}/log.txt)
+        ${writeCSV drv "vita-loopback" "Mpps"}
       '';
       checkPhase = ''
         cd src
