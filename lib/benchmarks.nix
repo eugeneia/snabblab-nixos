@@ -221,20 +221,20 @@ in rec {
      `vita-loopback` has no dependencies except Snabb. Packet size can be
      specified via pktsize.
   */
-  mkMatrixBenchVitaLoopback = { snabb, times, pktsize ? "IMIX",  conf ? "1", hardware ? "murren", keepShm, packets ? "20e6", cpu ? "0,0,1,2,3", ... }:
+  mkMatrixBenchVitaLoopback = { snabb, times, pktsize ? "IMIX", conf ? "1", sa_ttl ? "360", hardware ? "murren", keepShm, cpu ? "0,0,1,2,3", ... }:
     mkSnabbBenchTest {
-      name = "vita-loopback_pktsize=${pktsize}_conf=${conf}_packets=${packets}_hardware=${hardware}_cpu=${builtins.replaceStrings [","] ["x"] cpu}_snabb=${testing.versionToAttribute snabb.version or ""}";
+      name = "vita-loopback_pktsize=${pktsize}_conf=${conf}_sa_ttl=${sa_ttl}_hardware=${hardware}_cpu=${builtins.replaceStrings [","] ["x"] cpu}_snabb=${testing.versionToAttribute snabb.version or ""}";
       inherit snabb times hardware keepShm;
-      meta = { inherit pktsize conf packets hardware; };
+      meta = { inherit pktsize conf sa_ttl hardware; };
       toCSV = drv: ''
-        score=$(awk 'match($0,/[^ ]+ Gbps/) {print substr($0,RSTART,RLENGTH-5)}' < ${drv}/log.txt)
+        score=$(awk '/SoftBench: 8s/ {print $11}' < ${drv}/log.txt)
         ${writeCSV drv "vita-loopback" "Gbps"}
-        score=$(awk 'match($0,/[^ ]+ Mpps/) {print substr($0,RSTART,RLENGTH-5)}' < ${drv}/log.txt)
+        score=$(awk '/SoftBench: 8s/ {print $8}' < ${drv}/log.txt)
         ${writeCSV drv "vita-loopback" "Mpps"}
       '';
       checkPhase = ''
         cd src
-        /run/wrappers/bin/sudo -E ${snabb}/bin/snabb snsh program/vita/test.snabb ${pktsize} ${packets} ${conf} ${cpu} |& tee $out/log.txt
+        /run/wrappers/bin/sudo -E ${snabb}/bin/snabb snsh program/vita/test.snabb ${pktsize} ${conf} ${sa_ttl} ${cpu} .05 1e9 8 |& tee $out/log.txt
       '';
 
     };
@@ -356,5 +356,6 @@ in rec {
 
       esp = mkMatrixBenchESP;
       vita-loopback = mkMatrixBenchVitaLoopback;
+      vita-loopback-rekey = params: mkMatrixBenchVitaLoopback (params // {sa_ttl = "16";});
     };
 }
