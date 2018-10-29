@@ -116,7 +116,7 @@ p + ggtitle("Sequential test results colored by cluster")
 
 ### Samples:
 
-```
+```{r}
 nSamples <- 10
 for (c in unique(cls$cluster[!is.na(cls$cluster)])) {
   cat(sprintf("%s: ", c))
