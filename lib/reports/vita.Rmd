@@ -136,5 +136,14 @@ Differences between Vita versions.
 ```{r}
 # Ensure config is a factor
 loopback$config <- factor(loopback$config)
-TukeyHSD(aov(score ~ snabb + pktsize + config, data=loopback))
+mult_levels <- function (f) { length(unique(f)) > 1 }
+if (mult_levels(loopback$pktsize) && mult_levels(loopback$config)) {
+  TukeyHSD(aov(score ~ snabb + pktsize + config, data=loopback))
+} else if (mult_levels(loopback$pktsize)) {
+  TukeyHSD(aov(score ~ snabb + pktsize, data=loopback))
+} else if (mult_levels(loopback$config)) {
+  TukeyHSD(aov(score ~ snabb + config, data=loopback))
+} else {
+  TukeyHSD(aov(score ~ snabb, data=loopback))
+}
 ```
