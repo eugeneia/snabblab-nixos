@@ -221,20 +221,22 @@ in rec {
      `vita-loopback` has no dependencies except Snabb. Packet size can be
      specified via pktsize.
   */
-  mkMatrixBenchVitaLoopback = { snabb, times, pktsize ? "IMIX",  conf ? "1", hardware ? "murren", keepShm, packets ? "20e6", cpu ? "0,0,1,2,3", ... }:
+  mkMatrixBenchVitaLoopback = { snabb, times, pktsize ? "IMIX",  conf ? "1",
+     hardware ? "murren", keepShm, packets ? "20e6", cpu ? "0,0,1,2,3",
+     benchmark ? "test.snabb", ... }:
     mkSnabbBenchTest {
-      name = "vita-loopback_pktsize=${pktsize}_conf=${conf}_packets=${packets}_hardware=${hardware}_cpu=${builtins.replaceStrings [","] ["x"] cpu}_snabb=${testing.versionToAttribute snabb.version or ""}";
+      name = "${benchmark}_pktsize=${pktsize}_conf=${conf}_packets=${packets}_hardware=${hardware}_cpu=${builtins.replaceStrings [","] ["x"] cpu}_snabb=${testing.versionToAttribute snabb.version or ""}";
       inherit snabb times hardware keepShm;
       meta = { inherit pktsize conf packets hardware; };
       toCSV = drv: ''
         score=$(awk 'match($0,/[^ ]+ Gbps/) {print substr($0,RSTART,RLENGTH-5)}' < ${drv}/log.txt)
-        ${writeCSV drv "vita-loopback" "Gbps"}
+        ${writeCSV drv benchmark "Gbps"}
         score=$(awk 'match($0,/[^ ]+ Mpps/) {print substr($0,RSTART,RLENGTH-5)}' < ${drv}/log.txt)
-        ${writeCSV drv "vita-loopback" "Mpps"}
+        ${writeCSV drv benchmark "Mpps"}
       '';
       checkPhase = ''
         cd src
-        /run/wrappers/bin/sudo -E ${snabb}/bin/snabb snsh program/vita/test.snabb ${pktsize} ${packets} ${conf} ${cpu} |& tee $out/log.txt
+        /run/wrappers/bin/sudo -E ${snabb}/bin/snabb snsh program/vita/${benchmark} ${pktsize} ${packets} ${conf} ${cpu} |& tee $out/log.txt
       '';
 
     };
@@ -356,5 +358,6 @@ in rec {
 
       esp = mkMatrixBenchESP;
       vita-loopback = mkMatrixBenchVitaLoopback;
+      vita-loopback6 = params: mkMatrixBenchVitaLoopback (params // {benchmark = "test6.snabb";});
     };
 }
