@@ -34,20 +34,22 @@ in rec {
               cp qemu*.log $out/ || true
               cp snabb*.log $out/ || true
             '';
+            SNABB_SHM_ROOT="/var/run/${name'}";
             SNABB_SHM_KEEP=keepShm;
             postInstall = ''
               echo "POST INSTALL"
               echo "keepShm = $keepShm"
-              sudo chmod a+rX /var/run/snabb
+              echo "SNABB_SHM_ROOT = $SNABB_SHM_ROOT"
+              sudo chmod a+rX $SNABB_SHM_ROOT
               if [ -n "$keepShm" ]; then
-                cd /var/run/snabb
+                cd $SNABB_SHM_ROOT
                 sudo tar cvf $out/snabb.tar [0-9]*
-                sudo rm -r [0-9]*
                 sudo chown $(whoami):$(id -g -n) $out/snabb.tar
                 xz -0 -T0 $out/snabb.tar
                 mkdir -p $out/nix-support
                 echo "file tarball $out/snabb.tar.xz" >> $out/nix-support/hydra-build-products
               fi
+              sudo rm -rf $SNABB_SHM_ROOT
             '';
             meta = {
               snabbVersion = attrs.snabb.version or "";
