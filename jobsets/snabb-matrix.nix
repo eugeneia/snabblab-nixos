@@ -74,8 +74,7 @@ let
   subKernelPackages = selectKernelPackages kernelVersions;
   subQemus = selectQemus qemuVersions
              ++ (if qemuAsrc != null then [customQemu] else []);
-  subDpdks = selectDpdks dpdkVersions linuxPackages_3_18
-             ++ (if dpdkAsrc != null then [(customDpdk kPackages)] else []);
+  subDpdks = [];
 
   # Benchmarks using a matrix of software and a number of repeats
   benchmarks-list = with lib;
