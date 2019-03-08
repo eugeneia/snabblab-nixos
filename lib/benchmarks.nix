@@ -236,6 +236,7 @@ in rec {
       '';
       checkPhase = ''
         cd src
+        sleep 2
         /run/wrappers/bin/sudo -E ${snabb}/bin/snabb snsh program/vita/${benchmark} ${pktsize} ${packets} ${conf} ${cpu} |& tee $out/log.txt
       '';
 
