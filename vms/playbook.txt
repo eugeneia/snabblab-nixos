@@ -1,0 +1,11 @@
+(nixpkgs is 16.09)
+
+nixops create -I nixpkgs=../nixpkgs -d snabbvirtbot snabbvirtbot.nix snabbvirtbot-libvirtd.nix
+
+nixops deploy -I nixpkgs=../nixpkgs -d snabbvirtbot
+
+nixops ssh snabbvirtbot
+
+nixops destroy -d snabbvirtbot
+
+nixops delete -d snabbvirtbot
