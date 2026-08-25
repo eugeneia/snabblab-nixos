@@ -17,6 +17,7 @@ knitr::opts_chunk$set(echo = TRUE, error = TRUE, fig.width = 10, fig.height = 6)
 
 ```{r}
 library(ggplot2)
+library(dplyr)
 dat <- read.csv("bench.csv")
 d <- as.data.frame(dat)
 sliced <- d
@@ -59,3 +60,19 @@ p <- p + facet_wrap(config ~ pktsize ~ benchmark, scales = "free")
 p + ggtitle("Shape (distribution) of test results")
 ```
 
+## Tukey test
+
+### Overall difference between Snabb versions
+
+```{r}
+TukeyHSD(aov(score ~ snabb, data=sliced))
+```
+
+### Differences between Snabb versions by benchmark.
+
+```{r}
+for (b in unique(sliced$benchmark)) {
+  cat("TukeyHSD for benchmark ", b, "\n")
+  print(TukeyHSD(aov(score ~ snabb, data=filter(sliced, benchmark == b))))
+}
+```
