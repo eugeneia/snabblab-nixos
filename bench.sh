@@ -6,10 +6,6 @@ repositoryA=snabbco/snabb
 branchA=master
 nameA=master
 
-# repositoryB=eugeneia/snabb
-# branchB=max-next
-# nameB=max-next
-
 repositoryB=eugeneia/snabb
 branchB=max-next
 nameB=max-next
@@ -23,11 +19,11 @@ nameB=max-next
 # nameD=interlink
 
 #benchRelease='"basic" "interlink-single" "interlink-multi" "lwaftr-soft" "ipfix-probe"'
-benchRelease='"basic" "interlink-single" "interlink-multi" "lwaftr-soft" "ipfix-probe"'
+benchRelease='"basic" "mellanox-source-sink-64" "mellanox-source-sink-imix" "interlink-single" "interlink-multi" "lwaftr-soft" "ipfix-probe"'
 
 # reports: report-by-snabb
 
-nix-build --no-sandbox --max-jobs 1 --allow-new-privileges \
+nix-build --no-sandbox --max-jobs 1 --allow-new-privileges --no-filter-syscalls \
     --arg numTimesRunBenchmark "${numTimesRunBenchmark}" \
     --argstr snabbAname "${nameA}" \
     --arg snabbAsrc "builtins.fetchTarball https://github.com/${repositoryA}/tarball/${branchA}" \

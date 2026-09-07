@@ -53,7 +53,7 @@ rec {
     pkgs.stdenv.mkDerivation ((getPCIVars hardware) // {
       src = snabb.src;
 
-      buildInputs = [ pkgs.git pkgs.inetutils pkgs.tmux pkgs.numactl pkgs.bc pkgs.iproute pkgs.which pkgs.utillinux pkgs.python3 ];
+      buildInputs = [ pkgs.git pkgs.inetutils pkgs.tmux pkgs.numactl pkgs.bc pkgs.iproute2 pkgs.which pkgs.utillinux pkgs.python3 ];
 
       postUnpack = ''
         patchShebangs .

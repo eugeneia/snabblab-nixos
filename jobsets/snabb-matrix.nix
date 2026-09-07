@@ -4,7 +4,7 @@
 # Specify how many times each benchmark is repeated
 { numTimesRunBenchmark ? 1
 # Collection of Nix packages used
-, nixpkgs ? (fetchTarball https://github.com/NixOS/nixpkgs/archive/37e7e86ddd09d200bbdfd8ba8ec2fd2f0621b728.tar.gz)
+, nixpkgs ? (fetchTarball https://github.com/NixOS/nixpkgs/archive/refs/tags/24.11.tar.gz)
 # Up to 6 different Snabb branches specified using source and name
 , snabbAsrc
 , snabbBsrc ? null
