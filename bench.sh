@@ -31,7 +31,7 @@ nix-build --no-sandbox --max-jobs 1 --allow-new-privileges --no-filter-syscalls 
     --arg snabbBsrc "builtins.fetchTarball https://github.com/${repositoryB}/tarball/${branchB}" \
     --arg reports '["report-by-snabb"]' \
     --arg benchmarkNames "[ ${benchRelease} ]" \
-    --argstr hardware "nfg2" \
+    --argstr hardware "nfg3" \
     --show-trace \
     -A benchmark-csv \
     -A benchmark-reports \
