@@ -41,6 +41,20 @@ rec {
       SNABB_CPUS0 = "8-23";
       SNABB_CPUS1 = "32-47";
     };
+    node1_x6 = {
+      SNABB_CPUS = "38-47";
+      SNABB_CPUS0 = "38-42";
+      SNABB_CPUS1 = "43-47";
+      SNABB_PCI_CONNECTX_0 = "0000:85:00.0";
+      SNABB_PCI_CONNECTX_1 = "0000:85:00.1";
+    };
+    node1_x5 = {
+      SNABB_CPUS = "38-47";
+      SNABB_CPUS0 = "38-42";
+      SNABB_CPUS1 = "43-47";
+      SNABB_PCI_CONNECTX_0 = "0000:03:00.0";
+      SNABB_PCI_CONNECTX_1 = "0000:03:00.1";
+    };
     murren = {};
   };
 
